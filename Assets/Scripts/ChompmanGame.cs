@@ -53,7 +53,7 @@ public class ChompmanGame : MonoBehaviour
         if (game_state == GameStates.MenuState)
         {
             SwitchStateTo(GameStates.GameState);
-            player = Instantiate(chompman, new Vector3(0, 0.5f, -8.0f), Quaternion.identity);
+            player = Instantiate(chompman, chompman.transform.position, Quaternion.identity);
             player.transform.parent = GameObject.Find("Characters").transform;
             player_controller = player.GetComponent<PlayerController>();
             //Debug.Log("Spacebar!");
