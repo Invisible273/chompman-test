@@ -9,6 +9,7 @@ public class ChompmanGame : MonoBehaviour
 {
     private const int MAX_SCORE_SIZE = 6;
     private const int PELLET_VALUE = 100;
+    private const int POWERUP_VALUE = 1000;
     [SerializeField]
     GameObject main_menu;
 
@@ -17,6 +18,15 @@ public class ChompmanGame : MonoBehaviour
 
     [SerializeField]
     GameObject chompman;
+
+    [SerializeField]
+    GameObject pellet_container;
+
+    [SerializeField]
+    bool random_spawn = false;
+
+    GameObject spawn_random;
+    
 
     //[HideInInspector]
     public static ChompmanGame instance = null;
@@ -70,12 +80,25 @@ public class ChompmanGame : MonoBehaviour
         {
             SwitchStateTo(GameStates.GameState);
 
-            player = Instantiate(chompman, chompman.transform.position, Quaternion.identity);
+            if (!random_spawn)
+                //Non-random Instantiate
+                player = Instantiate(chompman, chompman.transform.position, Quaternion.identity);
+            else
+                //Random Instantiate
+                player = RandomSpawnOnPellet();
+
             player.transform.parent = GameObject.Find("Characters").transform;
             player_controller = player.GetComponent<PlayerController>();
 
             score_board = game_ui.GetComponentInChildren<TextMeshProUGUI>();
         }
+    }
+
+    GameObject RandomSpawnOnPellet() {
+        Transform[] pellet_coords = pellet_container.GetComponentsInChildren<Transform>();
+        int rand_index = UnityEngine.Random.Range(0,pellet_coords.Length);
+        Vector3 spawn_position = new Vector3(pellet_coords[rand_index].position.x, chompman.transform.position.y, pellet_coords[rand_index].position.z);
+        return Instantiate(chompman, spawn_position, Quaternion.identity);
     }
 
     void OnMove(InputValue movement_value)
@@ -89,6 +112,8 @@ public class ChompmanGame : MonoBehaviour
     {
         if (obj == "Pellet")
             SetScore(current_score + PELLET_VALUE);
+        if (obj == "PowerUp")
+            SetScore(current_score + POWERUP_VALUE);
     }
 
     void SetScore(int score)

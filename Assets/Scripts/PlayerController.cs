@@ -7,11 +7,12 @@ public class PlayerController : MonoBehaviour
     public LayerMask collision_list;
     public float speed = 0;
     public float move_distance;
-    private Rigidbody rb;
-    private float radius;
+    Rigidbody rb;
+    float radius;
     Vector3 destination = Vector3.zero;
     Vector3 movement_vector = Vector3.zero;
     Vector2 last_movement_attempt = Vector2.zero;
+    bool has_teleported;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -51,6 +52,8 @@ public class PlayerController : MonoBehaviour
 
         if ((Vector3)transform.position == destination)
         {
+            if (has_teleported)
+                has_teleported = false;
             if (movement_vector.magnitude > 0 && ValidateMovement(movement_vector, move_distance))
             {
                 destination = (Vector3)transform.position + movement_vector;
@@ -59,7 +62,7 @@ public class PlayerController : MonoBehaviour
             {
                 SetMovementVector(last_movement_attempt);
             }
-        }              
+        }           
     }
 
     bool ValidateMovement(Vector3 dir, float mov_dist){
@@ -82,7 +85,22 @@ public class PlayerController : MonoBehaviour
         {
             ChompmanGame.instance.ObjectTaken(other.gameObject.tag);
             other.gameObject.SetActive(false);
-        }     
+        }
+        else if (other.gameObject.CompareTag("PowerUp"))
+        {
+            ChompmanGame.instance.ObjectTaken(other.gameObject.tag);
+            other.gameObject.SetActive(false);
+        }
+        else if (other.gameObject.CompareTag("Teleporter") && !has_teleported)  
+        {   
+            int target_index = other.gameObject.transform.GetSiblingIndex() > 0 ? 0 : 1;
+            Transform next_teleporter = other.gameObject.transform.parent.GetChild(target_index);
+            Vector3 teleport_target = next_teleporter.position - other.gameObject.transform.position;
+            Vector3 offset = new Vector3(other.gameObject.transform.localScale.x*Mathf.Sign(-teleport_target.x), 0, 0);
+            transform.Translate(teleport_target + offset);
+            destination += teleport_target + offset;
+            has_teleported = true;
+        } 
     }
 }
  
