@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public LayerMask collision_list;
+    [SerializeField]
+    LayerMask collision_list;
     public float speed = 0;
-    public float move_distance;
     Rigidbody rb;
     float radius;
     Vector3 destination = Vector3.zero;
@@ -27,19 +27,19 @@ public class PlayerController : MonoBehaviour
             movement_vector = Vector3.zero;
         else if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
         {
-            if(movement.x > 0 && ValidateMovement(Vector3.right, move_distance))
-                movement_vector = move_distance * Vector3.right;
-            else if(movement.x < 0 && ValidateMovement(Vector3.left, move_distance))
-                movement_vector = move_distance * Vector3.left;
+            if(movement.x > 0 && ValidateMovement(Vector3.right, ChompmanGame.CELL_SIZE))
+                movement_vector = ChompmanGame.CELL_SIZE * Vector3.right;
+            else if(movement.x < 0 && ValidateMovement(Vector3.left, ChompmanGame.CELL_SIZE))
+                movement_vector = ChompmanGame.CELL_SIZE * Vector3.left;
             else
                 movement_vector = Vector3.zero;
         } 
         else
         {
-            if(movement.y > 0 && ValidateMovement(Vector3.forward, move_distance))
-                movement_vector = move_distance * Vector3.forward;
-            else if(movement.y < 0 && ValidateMovement(Vector3.back, move_distance))
-                movement_vector = move_distance * Vector3.back;
+            if(movement.y > 0 && ValidateMovement(Vector3.forward, ChompmanGame.CELL_SIZE))
+                movement_vector = ChompmanGame.CELL_SIZE * Vector3.forward;
+            else if(movement.y < 0 && ValidateMovement(Vector3.back, ChompmanGame.CELL_SIZE))
+                movement_vector = ChompmanGame.CELL_SIZE * Vector3.back;
             else
                 movement_vector = Vector3.zero;
         }
@@ -54,7 +54,7 @@ public class PlayerController : MonoBehaviour
         {
             if (has_teleported)
                 has_teleported = false;
-            if (movement_vector.magnitude > 0 && ValidateMovement(movement_vector, move_distance))
+            if (movement_vector.magnitude > 0 && ValidateMovement(movement_vector, ChompmanGame.CELL_SIZE))
             {
                 destination = (Vector3)transform.position + movement_vector;
             }

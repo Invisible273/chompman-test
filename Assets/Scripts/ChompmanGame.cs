@@ -7,6 +7,7 @@ using TMPro;
 
 public class ChompmanGame : MonoBehaviour
 {
+    public const float CELL_SIZE = 1.0f;
     private const int MAX_SCORE_SIZE = 6;
     private const int PELLET_VALUE = 100;
     private const int POWERUP_VALUE = 1000;
@@ -24,11 +25,11 @@ public class ChompmanGame : MonoBehaviour
 
     [SerializeField]
     bool random_spawn = false;
-
-    GameObject spawn_random;
+    [SerializeField]
+    GameObject grid;
     
-
-    //[HideInInspector]
+    [HideInInspector]
+    public HashSet<Cell> pathFindGrid;
     public static ChompmanGame instance = null;
 
     GameStates game_state;
@@ -90,7 +91,20 @@ public class ChompmanGame : MonoBehaviour
             player.transform.parent = GameObject.Find("Characters").transform;
             player_controller = player.GetComponent<PlayerController>();
 
+            pathFindGrid = grid.GetComponent<GridSetter>().tiles;
             score_board = game_ui.GetComponentInChildren<TextMeshProUGUI>();
+
+            foreach (Cell cell in pathFindGrid)
+            {
+                foreach (Cell.Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
+                {
+                    if(cell.GetNeighbour(dir) != null)
+                    {
+                        Vector3 origin = new Vector3(cell.coordinates.x, 0.5f ,cell.coordinates.y); 
+                        Debug.DrawLine(origin,origin + Cell.GetVector3FromDirection(dir)*ChompmanGame.CELL_SIZE, Color.blue, 1.5f);
+                    } 
+                }
+            }
         }
     }
 
