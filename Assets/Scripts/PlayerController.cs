@@ -4,44 +4,87 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField]
-    LayerMask collision_list;
     public float speed = 0;
+
+    [HideInInspector]
+    public Cell currentCell;
+    private Cell destinationCell;
     Rigidbody rb;
-    float radius;
     Vector3 destination = Vector3.zero;
     Vector3 movement_vector = Vector3.zero;
     Vector2 last_movement_attempt = Vector2.zero;
     bool has_teleported;
+
+    bool aiEnabled = false;
+    Cell[] targets;
+    Cell currentTarget;
+    int currentTargetIndex;
+    Cell.Direction prevDir;
+
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        radius = GetComponent<SphereCollider>().radius * transform.localScale.x;
+        destinationCell = currentCell;
         destination = transform.position;
+        InitializeAI();
+    }
+
+    void InitializeAI()
+    {
+        aiEnabled = true;
+        Transform[] targetsTransform = GameObject.Find("Pickups/PowerUps").GetComponentsInChildren<Transform>();
+        targets = new Cell[targetsTransform.Length - 1];
+        for(int i = 1; i < targetsTransform.Length; i++)
+        {
+            ChompmanGame.instance.pathFindGrid.GetCellByCoords(Cell.GetCoordsFromVector3(targetsTransform[i].position),out targets[i-1]);
+        }
+        currentTargetIndex = 0;
+        currentTarget = targets[currentTargetIndex];
+        prevDir = Cell.Direction.Up;
+    }
+
+    void CalculateMovement()
+    {
+        float travelDistance = float.MaxValue;
+        Cell.Direction tempDir = prevDir;
+        foreach (Cell.Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
+        {
+            if(prevDir == Cell.GetOppositeDirection(dir) || currentCell.GetNeighbour(dir) == null)
+                continue;
+            float distance = Vector2.Distance(currentCell.GetNeighbour(dir).coordinates,currentTarget.coordinates);
+            if (distance < travelDistance)
+            {
+                travelDistance = distance;
+                destinationCell = currentCell.GetNeighbour(dir);
+                tempDir = dir;
+            }
+        }
+        prevDir = tempDir;
+        destination = destinationCell.Vector3CoordCompletion(transform.position.y);
     }
 
     public void SetMovementVector(Vector2 movement)
     {
-        last_movement_attempt = movement;       
-        if (movement.x == 0 && movement.y == 0)
-            movement_vector = Vector3.zero;
-        else if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
+        if(!aiEnabled)
         {
-            if(movement.x > 0 && ValidateMovement(Vector3.right, ChompmanGame.CELL_SIZE))
-                movement_vector = ChompmanGame.CELL_SIZE * Vector3.right;
-            else if(movement.x < 0 && ValidateMovement(Vector3.left, ChompmanGame.CELL_SIZE))
-                movement_vector = ChompmanGame.CELL_SIZE * Vector3.left;
-            else
+            last_movement_attempt = movement;       
+            if (movement.x == 0 && movement.y == 0)
                 movement_vector = Vector3.zero;
-        } 
-        else
-        {
-            if(movement.y > 0 && ValidateMovement(Vector3.forward, ChompmanGame.CELL_SIZE))
-                movement_vector = ChompmanGame.CELL_SIZE * Vector3.forward;
-            else if(movement.y < 0 && ValidateMovement(Vector3.back, ChompmanGame.CELL_SIZE))
-                movement_vector = ChompmanGame.CELL_SIZE * Vector3.back;
+            else if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
+            {
+                if(movement.x > 0)
+                    movement_vector = Vector3.right;
+                else
+                    movement_vector = Vector3.left;
+            } 
             else
-                movement_vector = Vector3.zero;
+            {
+                if(movement.y > 0)
+                    movement_vector = Vector3.forward;
+                else
+                    movement_vector = Vector3.back;
+            }
         }
     }
 
@@ -50,33 +93,45 @@ public class PlayerController : MonoBehaviour
         Vector3 movement = Vector3.MoveTowards(transform.position, destination, speed);
         rb.MovePosition(movement);
 
-        if ((Vector3)transform.position == destination)
-        {
+        if (transform.position == destination)
+        { 
             if (has_teleported)
+            {
                 has_teleported = false;
-            if (movement_vector.magnitude > 0 && ValidateMovement(movement_vector, ChompmanGame.CELL_SIZE))
-            {
-                destination = (Vector3)transform.position + movement_vector;
+                if(!ChompmanGame.instance.pathFindGrid.GetCellByCoords(Cell.GetCoordsFromVector3(transform.position),out currentCell))
+                    Debug.LogError("Unexpected behaviour after teleportation.");
+                destinationCell = currentCell;
             }
-            else if (movement_vector.magnitude.Equals(0) && !last_movement_attempt.Equals(Vector2.zero))
+            else
+                currentCell = destinationCell;
+            if(!aiEnabled)
             {
-                SetMovementVector(last_movement_attempt);
+                if (movement_vector != Vector3.zero && currentCell.GetPathBool(movement_vector))
+                {
+                    destinationCell = currentCell.GetNeighbour(movement_vector);
+                    destination = destinationCell.Vector3CoordCompletion(transform.position.y);
+                }
+                else if (movement_vector == Vector3.zero && last_movement_attempt != Vector2.zero)
+                {
+                    SetMovementVector(last_movement_attempt);
+                }
+            }
+            else
+            {
+                if(currentCell == currentTarget)
+                {
+                    currentTargetIndex++;
+                    if(currentTargetIndex < targets.Length)
+                        currentTarget = targets[currentTargetIndex];
+                    else
+                    {
+                        aiEnabled = false;
+                        Debug.Log("Victory!");
+                    }       
+                }
+                CalculateMovement();
             }
         }           
-    }
-
-    bool ValidateMovement(Vector3 dir, float mov_dist){
-        float check_distance = mov_dist + radius;
-        Vector3 pos = transform.position;
-        Vector3 central = Vector3.Normalize(dir)*(check_distance);
-        Vector3 right = Vector3.Cross(Vector3.up,Vector3.Normalize(dir))*radius;
-        Vector3 left = Vector3.Cross(Vector3.down,Vector3.Normalize(dir))*radius;
-
-        bool hit_right = Physics.Linecast(pos, pos + central + right, collision_list);
-        bool hit_left = Physics.Linecast(pos, pos + central + left, collision_list);
-        Debug.DrawLine(pos,pos + central + right, Color.red, 0.1f);
-        Debug.DrawLine(pos,pos + central + left, Color.red, 0.1f);
-        return !(hit_right || hit_left);
     }
 
     void OnTriggerEnter(Collider other)

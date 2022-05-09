@@ -12,37 +12,40 @@ public class ChompmanGame : MonoBehaviour
     private const int PELLET_VALUE = 100;
     private const int POWERUP_VALUE = 1000;
     [SerializeField]
-    GameObject main_menu;
+    GameObject mainMenu;
 
     [SerializeField]
-    GameObject game_ui;
+    GameObject gameUI;
 
     [SerializeField]
     GameObject chompman;
 
     [SerializeField]
-    GameObject pellet_container;
+    GameObject pelletContainer;
 
     [SerializeField]
-    bool random_spawn = false;
+    CellView initialSpawn;
+
+    [SerializeField]
+    bool randomSpawn = false;
     [SerializeField]
     GameObject grid;
     
     [HideInInspector]
-    public HashSet<Cell> pathFindGrid;
+    public CellSet pathFindGrid;
     public static ChompmanGame instance = null;
 
-    GameStates game_state;
+    GameStates gameState;
     enum GameStates{
         MenuState,
         GameState
     }
 
-    PlayerController player_controller;
+    PlayerController playerController;
     GameObject player;
-    PlayerInput player_input;
-    int current_score = 0;
-    TextMeshProUGUI score_board = null;
+    PlayerInput playerInput;
+    int currentScore = 0;
+    TextMeshProUGUI scoreBoard = null;
 
     void Awake()
     {
@@ -52,24 +55,24 @@ public class ChompmanGame : MonoBehaviour
     }
     void Start()
     {
-        player_input = GetComponent<PlayerInput>();
+        playerInput = GetComponent<PlayerInput>();
         SwitchStateTo(GameStates.MenuState);
     }
 
     void SwitchStateTo(GameStates state)
     {
-        game_state = state;
-        switch (game_state)
+        gameState = state;
+        switch (gameState)
         {
             case GameStates.MenuState:
-                player_input.SwitchCurrentActionMap("Menu");
-                main_menu.SetActive(true);
-                game_ui.SetActive(false);
+                playerInput.SwitchCurrentActionMap("Menu");
+                mainMenu.SetActive(true);
+                gameUI.SetActive(false);
                 break;
             case GameStates.GameState:
-                player_input.SwitchCurrentActionMap("Player");
-                main_menu.SetActive(false);
-                game_ui.SetActive(true);
+                playerInput.SwitchCurrentActionMap("Player");
+                mainMenu.SetActive(false);
+                gameUI.SetActive(true);
                 break;
         }
     }
@@ -77,39 +80,47 @@ public class ChompmanGame : MonoBehaviour
     //Player Input
     void OnGameStart()
     {
-        if (game_state == GameStates.MenuState)
+        if (gameState == GameStates.MenuState)
         {
             SwitchStateTo(GameStates.GameState);
 
-            if (!random_spawn)
+            pathFindGrid = grid.GetComponent<GridSetter>().tiles;
+            Cell initialCell = initialSpawn.Cell;
+            if (!randomSpawn)
+            {
                 //Non-random Instantiate
-                player = Instantiate(chompman, chompman.transform.position, Quaternion.identity);
+                player = Instantiate(chompman, new Vector3(initialCell.coordinates.x,chompman.transform.position.y,initialCell.coordinates.y), Quaternion.identity);
+            }    
             else
+            {
                 //Random Instantiate
                 player = RandomSpawnOnPellet();
+                Vector2 currentPlayerPosition = new Vector2(player.transform.position.x, player.transform.position.z);
+                pathFindGrid.GetCellByCoords(currentPlayerPosition, out initialCell);
+            }
 
             player.transform.parent = GameObject.Find("Characters").transform;
-            player_controller = player.GetComponent<PlayerController>();
+            playerController = player.GetComponent<PlayerController>();
+            playerController.currentCell = initialCell;
 
-            pathFindGrid = grid.GetComponent<GridSetter>().tiles;
-            score_board = game_ui.GetComponentInChildren<TextMeshProUGUI>();
+            scoreBoard = gameUI.GetComponentInChildren<TextMeshProUGUI>();
 
-            foreach (Cell cell in pathFindGrid)
-            {
-                foreach (Cell.Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
-                {
-                    if(cell.GetNeighbour(dir) != null)
-                    {
-                        Vector3 origin = new Vector3(cell.coordinates.x, 0.5f ,cell.coordinates.y); 
-                        Debug.DrawLine(origin,origin + Cell.GetVector3FromDirection(dir)*ChompmanGame.CELL_SIZE, Color.blue, 1.5f);
-                    } 
-                }
-            }
+            // foreach (Cell cell in pathFindGrid.Cells)
+            // {
+            //     foreach (Cell.Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
+            //     {
+            //         if(cell.GetNeighbour(dir) != null)
+            //         {
+            //             Vector3 origin = new Vector3(cell.coordinates.x, 0.5f ,cell.coordinates.y); 
+            //             Debug.DrawLine(origin,origin + Cell.GetVector3FromDirection(dir)*ChompmanGame.CELL_SIZE, Color.blue, 1.5f);
+            //         } 
+            //     }
+            // }
         }
     }
 
     GameObject RandomSpawnOnPellet() {
-        Transform[] pellet_coords = pellet_container.GetComponentsInChildren<Transform>();
+        Transform[] pellet_coords = pelletContainer.GetComponentsInChildren<Transform>();
         int rand_index = UnityEngine.Random.Range(0,pellet_coords.Length);
         Vector3 spawn_position = new Vector3(pellet_coords[rand_index].position.x, chompman.transform.position.y, pellet_coords[rand_index].position.z);
         return Instantiate(chompman, spawn_position, Quaternion.identity);
@@ -118,27 +129,27 @@ public class ChompmanGame : MonoBehaviour
     void OnMove(InputValue movement_value)
     {
         Vector2 movement_vector = movement_value.Get<Vector2>();
-        player_controller.SetMovementVector(movement_vector);
+        playerController.SetMovementVector(movement_vector);
     }
 
     //Лучше реализовать через Event и Listener
     public void ObjectTaken(string obj)
     {
         if (obj == "Pellet")
-            SetScore(current_score + PELLET_VALUE);
+            SetScore(currentScore + PELLET_VALUE);
         if (obj == "PowerUp")
-            SetScore(current_score + POWERUP_VALUE);
+            SetScore(currentScore + POWERUP_VALUE);
     }
 
     void SetScore(int score)
     {
-        current_score = score;
-        if (score_board != null)
+        currentScore = score;
+        if (scoreBoard != null)
         {
-            string score_string = current_score.ToString();
+            string score_string = currentScore.ToString();
             while (score_string.Length < MAX_SCORE_SIZE)
                 score_string = "0" + score_string;
-            score_board.text = "SCORE: " + score_string;
+            scoreBoard.text = "SCORE: " + score_string;
         }
     }
 

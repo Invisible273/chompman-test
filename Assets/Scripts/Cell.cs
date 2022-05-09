@@ -15,7 +15,7 @@ public class Cell
     private bool _pathRight = false;
     private bool _pathLeft = false;
 
-    public enum Direction{Up, Down, Right, Left};
+    public enum Direction{Up, Left, Down, Right};
 
     public Cell()
     {
@@ -200,6 +200,20 @@ public class Cell
         }  
     }
 
+    public bool GetPathBool(Vector3 dir)
+    {
+        if (dir == Vector3.forward)
+            return _pathUp;
+        else if (dir == Vector3.back)
+            return _pathDown;
+        else if (dir == Vector3.right)
+            return _pathRight;
+        else if (dir == Vector3.left)
+            return _pathLeft;
+        else
+            return false;
+    }
+
     private void UpdatePathBools()
     {
         foreach (Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
@@ -209,6 +223,11 @@ public class Cell
             else
                 SetPathBool(dir, true);
         }
+    }
+
+    public Vector3 Vector3CoordCompletion(float missingCoord)
+    {
+        return new Vector3(_coords.x,missingCoord,_coords.y);
     }
 
     public static Vector3 GetVector3FromDirection(Direction dir)
@@ -244,6 +263,29 @@ public class Cell
             default: 
                 Debug.LogError("Unexpected error while getting Vector2 from Direction.");
                 return Vector2.zero;
+        }   
+    }
+
+    public static Vector2 GetCoordsFromVector3(Vector3 source)
+    {
+        return new Vector2(source.x,source.z);
+    }
+
+    public static Direction GetOppositeDirection(Direction dir)
+    {
+        switch (dir)
+        {
+            case Direction.Up:
+                return Direction.Down;
+            case Direction.Down:
+                return Direction.Up;
+            case Direction.Right:
+                return Direction.Left;
+            case Direction.Left:
+                return Direction.Right;
+            default: 
+                Debug.LogError("Unexpected error while getting opposite Direction.");
+                return Direction.Up;
         }   
     }
 }

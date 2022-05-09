@@ -8,15 +8,14 @@ public class GridSetter : MonoBehaviour
     private GameObject probe;
     [SerializeField]
     private LayerMask collisionList;
-    public HashSet<Cell> tiles = new HashSet<Cell>();
-    private Dictionary<Vector2,CellView> cellDict = new Dictionary<Vector2, CellView>();
+    public CellSet tiles = new CellSet();
     private float probeRadius;
 
     void Start()
     {   
         //Function to set up clean CellViews in new level geometry
         //InitialCellViewSet();
-        CellSet();
+        SetCellSet();
     }
 
     void InitialCellViewSet()
@@ -39,49 +38,42 @@ public class GridSetter : MonoBehaviour
         }
     }
 
-    void CellSet()
+    void SetCellSet()
     {
         foreach (CellView cellView in transform.gameObject.GetComponentsInChildren<CellView>())
         {
-            cellDict.Add(cellView.Cell.coordinates,cellView);
+            tiles.Add(cellView.Cell);
         }
-        foreach (CellView cellView in cellDict.Values)
+        foreach (CellView cellView in transform.gameObject.GetComponentsInChildren<CellView>())
         {
             if (cellView.isPassable)
             {
-                AttemptTileAdd(cellView);
+                SetNeighbours(cellView);
+            }
+            else
+            {
+                tiles.Remove(cellView.Cell);
             }
         }
     }
 
-    void AttemptTileAdd(CellView cellView)
+    void SetNeighbours(CellView cellView)
     {
-        if(!tiles.Contains(cellView.Cell))
-        {
-            tiles.Add(cellView.Cell);
-        }
         foreach (Cell.Direction dir in System.Enum.GetValues(typeof(Cell.Direction)))
         {
-            if(cellView.GetPathBool(dir) && cellView.Cell.GetNeighbour(dir) == null)
+            if(cellView.GetPathBool(dir))
             {
                 Vector2 neighbourCoordinates = cellView.Cell.coordinates + Cell.GetVector2FromDirection(dir)*ChompmanGame.CELL_SIZE;
-                if(cellDict.ContainsKey(neighbourCoordinates))
+                Cell neighbour = new Cell();
+                if(tiles.GetCellByCoords(neighbourCoordinates,out neighbour))
                 {
-                    CellView neighbour = cellDict[neighbourCoordinates];
-                    if(!tiles.TryGetValue(neighbour.Cell, out cellView.Cell.GetNeighbour(dir)))
-                    {
-                        AttemptTileAdd(neighbour);
-                        if(!tiles.TryGetValue(neighbour.Cell, out cellView.Cell.GetNeighbour(dir)))
-                        {
-                            Debug.LogWarning("Unexpected behaviour while connecting neighbours.");
-                        }
-                    }
+                    if(!tiles.SetCellNeighbour(cellView.Cell, neighbour, dir))
+                        Debug.LogWarning("Unexpected behaviour while setting neighbour.");
                 }
                 else
                 {
                     cellView.SetPathBool(dir, false);
-                    cellView.Cell.ClearNeighbour(dir);
-                    Debug.LogWarning("Unexpected behaviour while checking Cell dictionary.");
+                    Debug.LogWarning("Unexpected behaviour while checking CellSet.");
                 }
             }         
         }

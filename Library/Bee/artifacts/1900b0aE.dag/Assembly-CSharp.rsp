@@ -333,6 +333,7 @@
 -r:"Library/Bee/artifacts/1900b0aE.dag/UnityEditor.UI.ref.dll"
 -r:"Library/Bee/artifacts/1900b0aE.dag/UnityEngine.UI.ref.dll"
 "Assets/Scripts/Cell.cs"
+"Assets/Scripts/CellSet.cs"
 "Assets/Scripts/CellView.cs"
 "Assets/Scripts/CharacterController.cs"
 "Assets/Scripts/ChompmanGame.cs"
