@@ -5,7 +5,7 @@ using UnityEngine;
 public class PickupRotator : MonoBehaviour
 {
     public Vector3 rotation = Vector3.zero;
-    void Update()
+    private void Update()
     {
         transform.Rotate(rotation * Time.deltaTime);
     }

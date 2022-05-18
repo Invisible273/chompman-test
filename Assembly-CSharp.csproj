@@ -36,14 +36,23 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\PlayerController.cs" />
-     <Compile Include="Assets\Scripts\CharacterController.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\DaveController.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\EyeController.cs" />
+     <Compile Include="Assets\Scripts\Data Scripts\CellSet.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\PlayerController.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\CharacterController.cs" />
      <Compile Include="Assets\Scripts\PickupRotator.cs" />
      <Compile Include="Assets\Scripts\ChompmanGame.cs" />
-     <Compile Include="Assets\Scripts\GridSetter.cs" />
-     <Compile Include="Assets\Scripts\CellView.cs" />
-     <Compile Include="Assets\Scripts\Cell.cs" />
-     <Compile Include="Assets\Scripts\CellSet.cs" />
+     <Compile Include="Assets\Scripts\Data Scripts\GridSetter.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\InkyController.cs" />
+     <Compile Include="Assets\Scripts\Data Scripts\CellView.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\BinkyController.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\PinkyController.cs" />
+     <Compile Include="Assets\Scripts\Data Scripts\Cell.cs" />
+     <Compile Include="Assets\Scripts\Character Scripts\Enemy Scripts\GhostController.cs" />
+     <Compile Include="Assets\Scripts\Audio\AudioManager.cs" />
+     <Compile Include="Assets\Scripts\Audio\SoundVolume.cs" />
+     <Compile Include="Assets\Scripts\Audio\MusicVolume.cs" />
      <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
