@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class GhostController : CharacterController
 {
-    private const float FRIGHTENED_TIME = 800.0f;
+    private const float FRIGHTENED_TIME = 8.0f;
     [SerializeField]
     private GameObject ghostBody;
     [SerializeField]
